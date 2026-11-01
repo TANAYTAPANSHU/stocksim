@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useApp } from '../store/AppContext';
 import { colors, spacing } from '../theme';
+import { STARTING_CASH } from '../data/initialState';
+import { formatMoney } from '../utils/format';
 
 export function LoginScreen() {
   const { login } = useApp();
@@ -19,9 +21,10 @@ export function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to SocialApp</Text>
+      <Text style={styles.title}>StockSim</Text>
       <Text style={styles.subtitle}>
-        Pick a username. No password needed for this demo. New usernames create an account.
+        A practice trading app with virtual money. Prices are simulated, so nothing here is real
+        trading. You start with ₹{formatMoney(STARTING_CASH)} of virtual cash.
       </Text>
 
       <TextInput
@@ -45,7 +48,7 @@ export function LoginScreen() {
         onPress={submit}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
-        <Text style={styles.buttonText}>Continue</Text>
+        <Text style={styles.buttonText}>Start practicing</Text>
       </Pressable>
     </View>
   );
@@ -59,7 +62,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '700',
     color: colors.text,
     marginBottom: spacing.sm,

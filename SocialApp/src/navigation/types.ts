@@ -1,14 +1,13 @@
 export type RootStackParamList = {
   Login: undefined;
   Tabs: undefined;
-  PostDetail: { postId: string };
-  UserProfile: { userId: string };
+  StockDetail: { symbol: string };
 };
 
 export type TabParamList = {
-  Feed: undefined;
-  Search: undefined;
-  Create: undefined;
-  Notifications: undefined;
-  Profile: undefined;
+  Markets: undefined;
+  Watchlist: undefined;
+  Portfolio: undefined;
+  Orders: undefined;
+  Account: undefined;
 };

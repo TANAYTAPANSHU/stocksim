@@ -1,229 +1,99 @@
-import type {
-  AppNotification,
-  AppState,
-  Comment,
-  NotificationType,
-  Post,
-  User,
-} from '../types';
+import { HISTORY_LENGTH } from '../data/initialState';
+import type { AppState, Holding, Order, Side } from '../types';
+import { round2, validateOrder } from './selectors';
 
 export type Action =
-  | { type: 'LOGIN'; id: string; username: string }
+  | { type: 'LOGIN'; username: string }
   | { type: 'LOGOUT' }
-  | { type: 'CREATE_POST'; id: string; text: string; imageUrl?: string }
-  | { type: 'TOGGLE_LIKE'; postId: string }
-  | { type: 'ADD_COMMENT'; id: string; postId: string; text: string }
-  | { type: 'TOGGLE_FOLLOW'; userId: string }
-  | { type: 'MARK_NOTIFICATIONS_READ' }
-  | { type: 'BOT_LIKE'; postId: string; botId: string }
-  | { type: 'BOT_COMMENT'; comment: Comment };
-
-let counter = 0;
-export function newId(prefix: string): string {
-  counter += 1;
-  return `${prefix}_${Date.now().toString(36)}${counter.toString(36)}`;
-}
-
-function makeNotification(
-  recipientId: string,
-  type: NotificationType,
-  actorId: string,
-  postId?: string,
-): AppNotification {
-  return {
-    id: newId('n'),
-    recipientId,
-    type,
-    actorId,
-    postId,
-    createdAt: Date.now(),
-    read: false,
-  };
-}
-
-// Adds a notification, but never tells a user about their own actions.
-function withNotification(
-  notifications: AppNotification[],
-  recipientId: string,
-  type: NotificationType,
-  actorId: string,
-  postId?: string,
-): AppNotification[] {
-  if (recipientId === actorId) return notifications;
-  return [makeNotification(recipientId, type, actorId, postId), ...notifications];
-}
-
-function updateUser(
-  users: Record<string, User>,
-  userId: string,
-  update: (user: User) => User,
-): Record<string, User> {
-  const user = users[userId];
-  if (!user) return users;
-  return { ...users, [userId]: update(user) };
-}
+  | { type: 'PRICES_UPDATED'; factors: Record<string, number> }
+  | {
+      type: 'PLACE_ORDER';
+      id: string;
+      symbol: string;
+      side: Side;
+      qty: number;
+      createdAt: number;
+    }
+  | { type: 'TOGGLE_WATCHLIST'; symbol: string };
 
 export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'LOGIN': {
-      const username = action.username.trim().toLowerCase();
-      const existing = Object.values(state.users).find(
-        u => u.username === username,
-      );
-      if (existing) {
-        return { ...state, currentUserId: existing.id };
-      }
-      const user: User = {
-        id: action.id,
-        username,
-        bio: 'New here. Say hi!',
-        followers: [],
-        following: [],
-      };
-      return {
-        ...state,
-        currentUserId: user.id,
-        users: { ...state.users, [user.id]: user },
-      };
-    }
+    case 'LOGIN':
+      return { ...state, username: action.username.trim() };
 
     case 'LOGOUT':
-      return { ...state, currentUserId: null };
+      return { ...state, username: null };
 
-    case 'CREATE_POST': {
-      const me = state.currentUserId;
-      if (!me) return state;
-      const post: Post = {
+    case 'PRICES_UPDATED': {
+      const stocks = { ...state.stocks };
+      const history = { ...state.history };
+      for (const [symbol, factor] of Object.entries(action.factors)) {
+        const stock = stocks[symbol];
+        if (!stock) continue;
+        const price = Math.max(0.01, round2(stock.price * factor));
+        stocks[symbol] = { ...stock, price };
+        history[symbol] = [...(history[symbol] ?? []), price].slice(-HISTORY_LENGTH);
+      }
+      return { ...state, stocks, history };
+    }
+
+    case 'PLACE_ORDER': {
+      if (validateOrder(state, action.side, action.symbol, action.qty)) {
+        return state;
+      }
+      const stock = state.stocks[action.symbol];
+      const price = stock.price;
+      const total = round2(price * action.qty);
+      const holdings = { ...state.holdings };
+      let cash = state.cash;
+
+      if (action.side === 'BUY') {
+        const current: Holding | undefined = holdings[action.symbol];
+        const oldQty = current?.qty ?? 0;
+        const oldCost = current ? current.avgCost * oldQty : 0;
+        const newQty = oldQty + action.qty;
+        holdings[action.symbol] = {
+          symbol: action.symbol,
+          qty: newQty,
+          avgCost: round2((oldCost + total) / newQty),
+        };
+        cash = round2(cash - total);
+      } else {
+        const current = holdings[action.symbol];
+        const remaining = current.qty - action.qty;
+        if (remaining === 0) {
+          delete holdings[action.symbol];
+        } else {
+          holdings[action.symbol] = { ...current, qty: remaining };
+        }
+        cash = round2(cash + total);
+      }
+
+      const order: Order = {
         id: action.id,
-        authorId: me,
-        text: action.text,
-        imageUrl: action.imageUrl,
-        likedBy: [],
-        createdAt: Date.now(),
+        symbol: action.symbol,
+        side: action.side,
+        qty: action.qty,
+        price,
+        total,
+        createdAt: action.createdAt,
       };
-      return { ...state, posts: [post, ...state.posts] };
-    }
-
-    case 'TOGGLE_LIKE': {
-      const me = state.currentUserId;
-      const post = state.posts.find(p => p.id === action.postId);
-      if (!me || !post) return state;
-
-      const alreadyLiked = post.likedBy.includes(me);
-      const likedBy = alreadyLiked
-        ? post.likedBy.filter(id => id !== me)
-        : [...post.likedBy, me];
 
       return {
         ...state,
-        posts: state.posts.map(p => (p.id === post.id ? { ...p, likedBy } : p)),
-        notifications: alreadyLiked
-          ? state.notifications
-          : withNotification(
-              state.notifications,
-              post.authorId,
-              'like',
-              me,
-              post.id,
-            ),
+        cash,
+        holdings,
+        orders: [order, ...state.orders],
       };
     }
 
-    case 'ADD_COMMENT': {
-      const me = state.currentUserId;
-      const post = state.posts.find(p => p.id === action.postId);
-      if (!me || !post) return state;
-      const comment: Comment = {
-        id: action.id,
-        postId: post.id,
-        authorId: me,
-        text: action.text,
-        createdAt: Date.now(),
-      };
+    case 'TOGGLE_WATCHLIST': {
+      const isWatched = state.watchlist.includes(action.symbol);
       return {
         ...state,
-        comments: [...state.comments, comment],
-        notifications: withNotification(
-          state.notifications,
-          post.authorId,
-          'comment',
-          me,
-          post.id,
-        ),
-      };
-    }
-
-    case 'TOGGLE_FOLLOW': {
-      const me = state.currentUserId;
-      if (!me || me === action.userId) return state;
-      const isFollowing = state.users[me]?.following.includes(action.userId);
-
-      let users = updateUser(state.users, me, u => ({
-        ...u,
-        following: isFollowing
-          ? u.following.filter(id => id !== action.userId)
-          : [...u.following, action.userId],
-      }));
-      users = updateUser(users, action.userId, u => ({
-        ...u,
-        followers: isFollowing
-          ? u.followers.filter(id => id !== me)
-          : [...u.followers, me],
-      }));
-
-      return {
-        ...state,
-        users,
-        notifications: isFollowing
-          ? state.notifications
-          : withNotification(state.notifications, action.userId, 'follow', me),
-      };
-    }
-
-    case 'MARK_NOTIFICATIONS_READ': {
-      const me = state.currentUserId;
-      return {
-        ...state,
-        notifications: state.notifications.map(n =>
-          n.recipientId === me ? { ...n, read: true } : n,
-        ),
-      };
-    }
-
-    case 'BOT_LIKE': {
-      const post = state.posts.find(p => p.id === action.postId);
-      if (!post || post.likedBy.includes(action.botId)) return state;
-      if (action.botId === state.currentUserId) return state;
-      return {
-        ...state,
-        posts: state.posts.map(p =>
-          p.id === post.id
-            ? { ...p, likedBy: [...p.likedBy, action.botId] }
-            : p,
-        ),
-        notifications: withNotification(
-          state.notifications,
-          post.authorId,
-          'like',
-          action.botId,
-          post.id,
-        ),
-      };
-    }
-
-    case 'BOT_COMMENT': {
-      const post = state.posts.find(p => p.id === action.comment.postId);
-      if (!post || action.comment.authorId === state.currentUserId) return state;
-      return {
-        ...state,
-        comments: [...state.comments, action.comment],
-        notifications: withNotification(
-          state.notifications,
-          post.authorId,
-          'comment',
-          action.comment.authorId,
-          post.id,
-        ),
+        watchlist: isWatched
+          ? state.watchlist.filter(s => s !== action.symbol)
+          : [...state.watchlist, action.symbol],
       };
     }
 

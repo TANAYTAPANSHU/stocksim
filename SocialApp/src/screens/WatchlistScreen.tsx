@@ -2,37 +2,39 @@ import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { PostCard } from '../components/PostCard';
+import { StockRow } from '../components/StockRow';
 import { useApp } from '../store/AppContext';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, spacing } from '../theme';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-export function FeedScreen() {
+export function WatchlistScreen() {
   const { state } = useApp();
   const navigation = useNavigation<Nav>();
 
-  // Newest first. The reducer already puts new posts at the top.
-  const posts = [...state.posts].sort((a, b) => b.createdAt - a.createdAt);
+  const stocks = state.watchlist
+    .map(symbol => state.stocks[symbol])
+    .filter(Boolean);
 
   return (
     <FlatList
-      data={posts}
-      keyExtractor={post => post.id}
-      renderItem={({ item }) => (
-        <PostCard
-          post={item}
-          onPress={() => navigation.navigate('PostDetail', { postId: item.id })}
-          onAuthorPress={() => navigation.navigate('UserProfile', { userId: item.authorId })}
-        />
-      )}
+      style={styles.list}
+      data={stocks}
+      keyExtractor={stock => stock.symbol}
       ListEmptyComponent={
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>No posts yet. Create the first one!</Text>
+          <Text style={styles.muted}>
+            Your watchlist is empty. Open a stock in Markets and tap "Add to watchlist".
+          </Text>
         </View>
       }
-      style={styles.list}
+      renderItem={({ item }) => (
+        <StockRow
+          stock={item}
+          onPress={() => navigation.navigate('StockDetail', { symbol: item.symbol })}
+        />
+      )}
     />
   );
 }
@@ -45,8 +47,9 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     alignItems: 'center',
   },
-  emptyText: {
+  muted: {
     color: colors.textSecondary,
-    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 21,
   },
 });

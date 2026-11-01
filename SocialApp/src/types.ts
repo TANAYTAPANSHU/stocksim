@@ -1,44 +1,35 @@
-export type User = {
-  id: string;
-  username: string;
-  bio: string;
-  followers: string[];
-  following: string[];
+export type Stock = {
+  symbol: string;
+  name: string;
+  sector: string;
+  price: number;
+  openPrice: number;
 };
 
-export type Post = {
-  id: string;
-  authorId: string;
-  text: string;
-  imageUrl?: string;
-  likedBy: string[];
-  createdAt: number;
+export type Side = 'BUY' | 'SELL';
+
+export type Holding = {
+  symbol: string;
+  qty: number;
+  avgCost: number;
 };
 
-export type Comment = {
+export type Order = {
   id: string;
-  postId: string;
-  authorId: string;
-  text: string;
+  symbol: string;
+  side: Side;
+  qty: number;
+  price: number;
+  total: number;
   createdAt: number;
-};
-
-export type NotificationType = 'like' | 'comment' | 'follow';
-
-export type AppNotification = {
-  id: string;
-  recipientId: string;
-  type: NotificationType;
-  actorId: string;
-  postId?: string;
-  createdAt: number;
-  read: boolean;
 };
 
 export type AppState = {
-  currentUserId: string | null;
-  users: Record<string, User>;
-  posts: Post[];
-  comments: Comment[];
-  notifications: AppNotification[];
+  username: string | null;
+  cash: number;
+  stocks: Record<string, Stock>;
+  history: Record<string, number[]>;
+  holdings: Record<string, Holding>;
+  orders: Order[];
+  watchlist: string[];
 };

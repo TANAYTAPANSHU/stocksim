@@ -4,10 +4,11 @@ export const colors = {
   border: '#E3E5E8',
   text: '#111418',
   textSecondary: '#6B7280',
-  primary: '#1877F2',
+  primary: '#1F4FD8',
   primaryText: '#FFFFFF',
+  up: '#1E8E3E',
+  down: '#D93025',
   danger: '#D93025',
-  like: '#E0245E',
 };
 
 export const spacing = {
