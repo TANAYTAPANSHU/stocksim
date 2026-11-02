@@ -1,0 +1,70 @@
+name: iOS smoke test
+
+# Builds StockSim for the iOS Simulator on a macOS runner and runs the agent-device smoke test.
+# Runs on pull requests and on demand. It is not run on every push because macOS runners are slow.
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: smoke-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Build and run smoke test
+    runs-on: macos-26
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install CocoaPods dependencies
+        working-directory: StockSim/ios
+        run: pod install
+
+      # Release build: the JavaScript bundle is embedded, so no Metro server is needed.
+      - name: Build app for the simulator
+        run: |
+          xcodebuild -workspace StockSim/ios/StockSim.xcworkspace \
+            -scheme StockSim \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -derivedDataPath StockSim/ios/build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Boot simulator
+        run: |
+          UDID=$(xcrun simctl list devices available | grep "iPhone 17 Pro (" | head -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          echo "Simulator UDID: $UDID"
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+
+      - name: Install app on simulator
+        run: xcrun simctl install "$SIM_UDID" StockSim/ios/build/Build/Products/Release-iphonesimulator/StockSim.app
+
+      - name: Install agent-device
+        run: npm install -g agent-device
+
+      - name: Run smoke test
+        working-directory: StockSim
+        run: npm run smoke
+
+      - name: Upload smoke test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-reports
+          path: StockSim/e2e/reports
+          if-no-files-found: ignore

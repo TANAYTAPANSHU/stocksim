@@ -135,6 +135,15 @@ Results are printed to the terminal. A JUnit report is written to `e2e/reports/s
 
 **Note:** the selectors depend on the accessibility labels in `src/`. If you rename a label, update the matching line in `e2e/smoke.ad`.
 
+## Continuous integration
+
+Two GitHub Actions workflows live in the repo root `.github/workflows/`:
+
+- **CI** (`ci.yml`) runs on every push and pull request on Linux. It runs the TypeScript check, lint and unit tests.
+- **iOS smoke test** (`smoke-ios.yml`) runs on pull requests and on demand. It builds the Release app on a macOS runner, boots an iPhone 17 Pro simulator, and runs `npm run smoke`. Reports are uploaded as the `smoke-test-reports` artifact.
+
+The smoke workflow is not run on every push because macOS runners are slow.
+
 ## Known limitations
 
 - Single demo portfolio. Logging out keeps the portfolio, and logging in as a different user uses the same one.

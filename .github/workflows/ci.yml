@@ -1,0 +1,40 @@
+name: CI
+
+# Fast checks on every push and pull request. Runs on Linux, so it uses no macOS minutes.
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Type check, lint and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # The repo root is an npm workspace, so dependencies are installed from the root.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        working-directory: StockSim
+        run: npx tsc --noEmit
+
+      - name: Lint
+        working-directory: StockSim
+        run: npx eslint src App.tsx __tests__
+
+      - name: Unit tests
+        working-directory: StockSim
+        run: npm test
