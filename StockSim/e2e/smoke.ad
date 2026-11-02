@@ -1,0 +1,31 @@
+# StockSim smoke test (agent-device replay script)
+#
+# Covers the core flow: log in, find a stock, buy one share, and see it in the portfolio.
+# Selectors use the accessibility labels set in the app source. If a step diverges,
+# agent-device returns ranked selector suggestions from the live screen.
+
+open org.reactjs.native.example.StockSim --relaunch
+
+# 1. Login (first wait covers the one-time test runner startup; a fresh CI runner
+# can take a few minutes to build it)
+# Submit with the keyboard return key: the login screen logs in on submit.
+wait 'label="Username"' 360000
+fill 'label="Username"' "trader"
+keyboard enter
+
+# 2. Markets: the stock list is visible
+wait 'label="TCHN, Techno Labs"' 20000
+
+# 3. Open the stock and buy one share
+press 'label="TCHN, Techno Labs"'
+wait 'label="Quantity"' 10000
+fill 'label="Quantity"' "1"
+press 'label="Done"'
+press 'label="BUY TCHN"'
+wait text "placed." 10000
+
+# 4. Back to the list, then check the portfolio
+back
+press 'label="Portfolio, tab, 3 of 5"'
+wait text "TCHN" 10000
+wait text "1 shares" 10000
