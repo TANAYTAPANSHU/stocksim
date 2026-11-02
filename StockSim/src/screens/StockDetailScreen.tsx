@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -114,18 +115,29 @@ export function StockDetailScreen() {
           })}
         </View>
 
-        <TextInput
-          accessibilityLabel="Quantity"
-          placeholder="Quantity (whole shares)"
-          placeholderTextColor={colors.textSecondary}
-          keyboardType="number-pad"
-          value={qtyText}
-          onChangeText={value => {
-            setQtyText(value.replace(/[^0-9]/g, ''));
-            setError(null);
-          }}
-          style={styles.input}
-        />
+        <View style={styles.quantityRow}>
+          <TextInput
+            accessibilityLabel="Quantity"
+            placeholder="Quantity (whole shares)"
+            placeholderTextColor={colors.textSecondary}
+            keyboardType="number-pad"
+            value={qtyText}
+            onChangeText={value => {
+              setQtyText(value.replace(/[^0-9]/g, ''));
+              setError(null);
+            }}
+            style={[styles.input, styles.quantityInput]}
+          />
+          {/* The number pad has no return key, so this button closes the keyboard. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Done"
+            onPress={() => Keyboard.dismiss()}
+            style={({ pressed }) => [styles.doneButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.doneText}>Done</Text>
+          </Pressable>
+        </View>
         <Text style={styles.body}>
           Estimated {side === 'BUY' ? 'cost' : 'proceeds'}:{' '}
           {estimate === null ? '-' : `₹${formatMoney(estimate)}`}
@@ -243,6 +255,25 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     fontSize: 16,
     color: colors.text,
+  },
+  quantityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  quantityInput: {
+    flex: 1,
+  },
+  doneButton: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  doneText: {
+    color: colors.primary,
+    fontWeight: '600',
   },
   error: {
     color: colors.danger,

@@ -6,10 +6,11 @@
 
 open org.reactjs.native.example.StockSim --relaunch
 
-# 1. Login
-wait 'label="Username"' 20000
+# 1. Login (first wait covers the one-time test runner startup)
+# Submit with the keyboard return key: the login screen logs in on submit.
+wait 'label="Username"' 120000
 fill 'label="Username"' "trader"
-press 'label="Start practicing"'
+keyboard enter
 
 # 2. Markets: the stock list is visible
 wait 'label="TCHN, Techno Labs"' 20000
@@ -18,11 +19,12 @@ wait 'label="TCHN, Techno Labs"' 20000
 press 'label="TCHN, Techno Labs"'
 wait 'label="Quantity"' 10000
 fill 'label="Quantity"' "1"
+press 'label="Done"'
 press 'label="BUY TCHN"'
 wait text "placed." 10000
 
 # 4. Back to the list, then check the portfolio
 back
-press 'label="Portfolio"'
+press 'label="Portfolio, tab, 3 of 5"'
 wait text "TCHN" 10000
 wait text "1 shares" 10000
