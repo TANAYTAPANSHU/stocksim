@@ -94,6 +94,47 @@ npm test
 
 The test suite covers login, buying and selling (including average cost), validation, watchlist, and the portfolio maths. It currently has 16 passing tests.
 
+### Smoke test (agent-device)
+
+The smoke test runs the real app in the iOS Simulator and drives it like a user would. It logs in, buys one share of `TCHN`, and checks that the holding appears in the portfolio. Use it after a change to confirm the main flow still works.
+
+The flow lives in `e2e/smoke.ad` and is run by `scripts/smoke.sh`. It uses `agent-device`, which finds elements by their accessibility labels.
+
+**Setup (once):**
+
+```bash
+npm install -g agent-device
+```
+
+**Run locally** (with the iOS Simulator booted and the app installed or running):
+
+```bash
+npm run smoke
+```
+
+**Run in the cloud** (no local Mac needed):
+
+```bash
+# From the repo root, start a session with the agent proxy enabled
+native-sim up --agent --framework react-native --project-dir StockSim
+
+# Run the agent-device connect command that native-sim prints, then:
+cd StockSim && npm run smoke
+```
+
+Results are printed to the terminal. A JUnit report is written to `e2e/reports/smoke-junit.xml`, and screenshots and artifacts go to `e2e/reports/artifacts/`. Both folders are git-ignored.
+
+**What the smoke test checks:**
+
+1. Login with the username `trader`.
+2. The stock list shows `TCHN, Techno Labs`.
+3. Buying 1 share of `TCHN` shows the "placed." confirmation.
+4. The portfolio shows `TCHN` with "1 shares".
+
+**Adding a step:** write one line in `e2e/smoke.ad`, using `press`, `fill`, `wait` or `back` with a `label="..."` or `text "..."` selector. If a selector does not match, the run stops with a divergence report that lists better selector candidates from the live screen. Fix the selector and run again.
+
+**Note:** the selectors depend on the accessibility labels in `src/`. If you rename a label, update the matching line in `e2e/smoke.ad`.
+
 ## Known limitations
 
 - Single demo portfolio. Logging out keeps the portfolio, and logging in as a different user uses the same one.

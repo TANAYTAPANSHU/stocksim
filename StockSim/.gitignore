@@ -73,3 +73,6 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# agent-device smoke test output
+e2e/reports/
