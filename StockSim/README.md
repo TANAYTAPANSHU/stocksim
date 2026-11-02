@@ -1,8 +1,20 @@
 # StockSim
 
-A practice stock trading app built with **React Native 0.88** and **TypeScript**. Every account starts with virtual cash, prices update live, and you can buy and sell shares, track a watchlist and watch your portfolio P&L.
+StockSim is a practice stock trading app built with **React Native 0.88** and **TypeScript**. It is a small but complete app. A user logs in with a username, sees eight fictional stocks whose prices move every few seconds, and buys or sells shares. Every order is checked for enough cash, enough shares and a whole-number quantity. Favourite stocks go into a watchlist, the portfolio shows total equity and profit or loss on each holding, and every trade appears in the order history.
+
+The project is also a working proof of concept for two tools:
+
+- **agent-device** lets an automation tool, or an AI coding agent, drive the app the way a user would. It finds buttons and fields by their accessibility labels. The repo includes an end-to-end smoke test that logs in, buys one share and checks the portfolio.
+- **native-sim** builds the app on a GitHub-hosted macOS runner and streams the iOS Simulator to a browser. A developer or reviewer can see a running build without owning a Mac.
+
+Continuous integration runs the type check, lint and unit tests on every push. The iOS smoke test runs on pull requests and on demand.
 
 > StockSim is for learning and demos only. Companies, tickers and prices are fictional and simulated. It is not connected to any real market or broker.
+
+## Demo
+
+- [Local smoke test recording](docs/media/smoke-local.mp4): the full test running on a local iOS 26.5 simulator (iPhone 17 Pro). It logs in, buys one share of TCHN and checks the portfolio.
+- [Cloud smoke test recording](docs/media/smoke-cloud.mp4): the same test running on a GitHub macOS runner through native-sim. The simulator runs in the cloud and is streamed to the browser.
 
 ## Features
 
