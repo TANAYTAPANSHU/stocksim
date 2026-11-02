@@ -12,6 +12,7 @@ This repository is also a working proof of concept for automated, cloud-ready mo
 
 - [Local smoke test recording](StockSim/docs/media/smoke-local.mp4): the full test on a local iOS 26.5 simulator (iPhone 17 Pro).
 - [Cloud smoke test recording](StockSim/docs/media/smoke-cloud.mp4): the same test on a GitHub macOS runner, streamed through native-sim.
+- [Screen recording, 2 November 2026](StockSim/docs/media/screen-recording-2026-11-02.mov): a screen recording of the app flow, captured on a Mac.
 
 ## What is in this repo
 

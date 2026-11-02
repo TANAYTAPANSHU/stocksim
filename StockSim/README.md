@@ -15,6 +15,7 @@ Continuous integration runs the type check, lint and unit tests on every push. T
 
 - [Local smoke test recording](docs/media/smoke-local.mp4): the full test running on a local iOS 26.5 simulator (iPhone 17 Pro). It logs in, buys one share of TCHN and checks the portfolio.
 - [Cloud smoke test recording](docs/media/smoke-cloud.mp4): the same test running on a GitHub macOS runner through native-sim. The simulator runs in the cloud and is streamed to the browser.
+- [Screen recording, 2 November 2026](docs/media/screen-recording-2026-11-02.mov): a screen recording of the app flow, captured on a Mac.
 
 ## Features
 
