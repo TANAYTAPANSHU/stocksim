@@ -6,9 +6,10 @@
 
 open org.reactjs.native.example.StockSim --relaunch
 
-# 1. Login (first wait covers the one-time test runner startup)
+# 1. Login (first wait covers the one-time test runner startup; a fresh CI runner
+# can take a few minutes to build it)
 # Submit with the keyboard return key: the login screen logs in on submit.
-wait 'label="Username"' 120000
+wait 'label="Username"' 360000
 fill 'label="Username"' "trader"
 keyboard enter
 

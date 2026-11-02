@@ -94,6 +94,8 @@ npm test
 
 The test suite covers login, buying and selling (including average cost), validation, watchlist, and the portfolio maths. It currently has 16 passing tests.
 
+For a complete step-by-step installation guide, including troubleshooting, see [docs/SETUP.md](docs/SETUP.md).
+
 ### Smoke test (agent-device)
 
 The smoke test runs the real app in the iOS Simulator and drives it like a user would. It logs in, buys one share of `TCHN`, and checks that the holding appears in the portfolio. Use it after a change to confirm the main flow still works.
