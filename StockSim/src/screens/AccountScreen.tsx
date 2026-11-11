@@ -1,12 +1,23 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useApp } from '../store/AppContext';
 import { colors, spacing } from '../theme';
 import { STARTING_CASH } from '../data/initialState';
 import { formatMoney } from '../utils/format';
 
 export function AccountScreen() {
-  const { state, logout } = useApp();
+  const { state, logout, resetAccount } = useApp();
+
+  const confirmReset = () => {
+    Alert.alert(
+      'Reset account?',
+      'This clears your saved cash, holdings, orders and watchlist and starts again with the starting cash.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Reset', style: 'destructive', onPress: resetAccount },
+      ],
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -17,6 +28,14 @@ export function AccountScreen() {
       <Text style={styles.muted}>
         Prices are simulated and refresh every few seconds. This is not real market data.
       </Text>
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={confirmReset}
+        style={({ pressed }) => [styles.logout, pressed && styles.pressed]}
+      >
+        <Text style={styles.logoutText}>Reset account</Text>
+      </Pressable>
 
       <Pressable
         accessibilityRole="button"

@@ -1,4 +1,5 @@
 import { HISTORY_LENGTH } from '../data/initialState';
+import type { PersistedState } from './persistence';
 import type { AppState, Holding, Order, Side } from '../types';
 import { round2, validateOrder } from './selectors';
 
@@ -14,7 +15,8 @@ export type Action =
       qty: number;
       createdAt: number;
     }
-  | { type: 'TOGGLE_WATCHLIST'; symbol: string };
+  | { type: 'TOGGLE_WATCHLIST'; symbol: string }
+  | { type: 'RESTORE'; persisted: PersistedState };
 
 export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -23,6 +25,17 @@ export function reducer(state: AppState, action: Action): AppState {
 
     case 'LOGOUT':
       return { ...state, username: null };
+
+    case 'RESTORE':
+      // Hydrate the persisted account slice over the freshly built state;
+      // market data (stocks, history) keeps its initial values.
+      return {
+        ...state,
+        cash: action.persisted.cash,
+        holdings: action.persisted.holdings,
+        orders: action.persisted.orders,
+        watchlist: action.persisted.watchlist,
+      };
 
     case 'PRICES_UPDATED': {
       const stocks = { ...state.stocks };
